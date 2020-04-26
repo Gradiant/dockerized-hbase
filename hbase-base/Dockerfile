@@ -1,9 +1,9 @@
-FROM gradiant/hadoop-base:2.7.7 as hadoop
+FROM quay.io/kaszpir/dockerized-hadoop:3.1.3 as hadoop
 
 FROM openjdk:8u171-jre-alpine3.8
 LABEL maintainer="cgiraldo@gradiant.org"
 LABEL organization="gradiant.org"
-ARG VERSION=2.0.1
+ARG VERSION=2.1.10
 ENV HBASE_VERSION=$VERSION
 
 RUN apk add --no-cache bash perl jruby curl && mkdir /opt && \
