@@ -1,4 +1,4 @@
-ARG VERSION=2.0.1
+ARG VERSION=2.1.10
 FROM gradiant/hbase-base:$VERSION
 
 LABEL maintainer="cgiraldo@gradiant.org"

@@ -1,8 +1,14 @@
 #!/bin/bash
-: ${DOCKER_REGISTRY:-'gradiant'}
-VERSION=2.1.10
+set -x
+set -e
+# to build your own image:
+# export DOCKER_REGISTRY=quay.io/kaszpir
+# ./build-docker.sh
+: ${DOCKER_REGISTRY:='gradiant'}
+: ${VERSION:='2.1.10'}
 
 docker build --build-arg VERSION=$VERSION -t ${DOCKER_REGISTRY}/hbase-base:$VERSION hbase-base
+
 docker build --build-arg VERSION=$VERSION -t ${DOCKER_REGISTRY}/hbase-master:$VERSION hbase-master
 docker build --build-arg VERSION=$VERSION -t ${DOCKER_REGISTRY}/hbase-region:$VERSION hbase-region
 
