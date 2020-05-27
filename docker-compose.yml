@@ -1,49 +1,68 @@
-version: '3'
+# env vars to set before start
+# VERSION=2.1.10 - hbase version
+# DOCKER_REGISTRY=gradiant - docker registry
+# HADOOP_VERSION=2.7.7 - hadoop version tag
+# HDFS_IMAGE_NAMENODE=hdfs-namenode - docker image to use for hdfs namenode
+# HDFS_IMAGE_DATANODE=hdfs-datanode - docker image to use for hdfs namenode
+---
+version: "3"
 services:
   hbase-master:
-    image: gradiant/hbase-master
+    image: "${DOCKER_REGISTRY}/hbase-master:${VERSION}"
     environment:
-      - HBASE_CONF_hbase_rootdir=hdfs://hdfs-namenode:8020/hbase
-      - HBASE_CONF_hbase_master_port=60000
-      - HBASE_CONF_hbase_master_info_port=60010
-      - HBASE_CONF_hbase_zookeeper_quorum=zookeeper
+      HBASE_CONF_hbase_rootdir: "hdfs://hdfs-namenode:8020/hbase"
+      HBASE_CONF_hbase_master_port: "60000"
+      HBASE_CONF_hbase_master_info_port: "60010"
+      HBASE_CONF_hbase_zookeeper_quorum: "zookeeper"
+      HBASE_OPTS: "-XX:+PrintFlagsFinal -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XshowSettings:vm"
     ports:
-      - 60010:60010
+      - "60010:60010"
     depends_on:
-      - zookeeper
-      - hdfs-namenode
+      - "zookeeper"
+      - "hdfs-namenode"
   hbase-region:
-    image: gradiant/hbase-region
+    image: "${DOCKER_REGISTRY}/hbase-region:${VERSION}"
     environment:
-      - HBASE_CONF_hbase_rootdir=hdfs://hdfs-namenode:8020/hbase
-      - HBASE_CONF_hbase_master=hbase-master:60000
-      - HBASE_CONF_hbase_regionserver_info_port=60030
-      - HBASE_CONF_hbase_zookeeper_quorum=zookeeper
+      HBASE_CONF_hbase_rootdir: "hdfs://hdfs-namenode:8020/hbase"
+      HBASE_CONF_hbase_master: "hbase-master:60000"
+      HBASE_CONF_hbase_regionserver_info_port: "60030"
+      HBASE_CONF_hbase_zookeeper_quorum: "zookeeper"
+      HBASE_OPTS: "-XX:+PrintFlagsFinal -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XshowSettings:vm"
     ports:
-      - 60030:60030
+      - "60030:60030"
     depends_on:
-      - hbase-master
+      - "hbase-master"
 
   zookeeper:
-    image: zookeeper:3.4
+    image: "zookeeper:3.4"
 
   hdfs-namenode:
-    image: gradiant/hdfs-namenode:2.7.7
+    image: "${DOCKER_REGISTRY}/${HDFS_IMAGE_NAMENODE}:${HADOOP_VERSION}"
+    command: "namenode"
     environment:
-    - CLUSTER_NAME=hdfs-cluster
-    - HDFS_CONF_dfs_replication=1
+      CLUSTER_NAME: "hdfs-cluster"
+      HDFS_CONF_dfs_replication: "1"
+      HADOOP_SHELL_SCRIPT_DEBUG: "true"
+      HADOOP_OPTS: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XshowSettings:vm"
+    ports:
+      - "50070:50070"  # hdfs 2.x
+      - "19870:9870"  # hdfs 3.x
     volumes:
-    - name:/hadoop/dfs/name
+      - "name:/hadoop/dfs/name"
+
   hdfs-datanode:
-    image: gradiant/hdfs-datanode:2.7.7
+    image: "${DOCKER_REGISTRY}/${HDFS_IMAGE_DATANODE}:${HADOOP_VERSION}"
+    command: "datanode"
     environment:
-    - CORE_CONF_fs_defaultFS=hdfs://hdfs-namenode:8020
-    - HDFS_CONF_dfs_replication=1
-    - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+      CORE_CONF_fs_defaultFS: "hdfs://hdfs-namenode:8020"
+      HDFS_CONF_dfs_replication: "1"
+      HDFS_CONF_dfs_datanode_data_dir: "file:///dfs/data"
+      HADOOP_SHELL_SCRIPT_DEBUG: "true"
+      HDFS_DATANODE_OPTS: "-XX:+PrintFlagsFinal -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XshowSettings:vm"
     volumes:
-    - data-0:/hadoop/dfs/data
+      - "data-0:/hadoop/dfs/data"
     depends_on:
-    - hdfs-namenode
+      - "hdfs-namenode"
 
 volumes:
   data-0:
